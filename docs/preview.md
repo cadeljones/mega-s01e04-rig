@@ -16,6 +16,9 @@ The workflow must be on the default branch before GitHub exposes manual dispatch
 a reviewed ref containing the completed digest work. Pushing commits never publishes a preview.
 Node 22 and pnpm 8.11.0 are pinned for the workspace's compatibility requirements; installation
 uses the frozen lockfile, followed by tests and type checking. Actions are pinned to commit SHAs.
+The official `configure-pages` action checks that the site exists before building, with
+`enablement: false`. With no static-site generator configured, it reads site metadata and
+exports Pages metadata; it does not enable Pages, change its source, or reset deployments.
 
 ## Publish after approval
 
@@ -56,6 +59,51 @@ with approval before considering cleanup complete. Hard cancellation, runner los
 that fails before returning its ID can prevent deletion; retention is a fallback, not immediate
 erasure. Hosted-runner files are also removed in an `always()` step. Public viewers can save
 copies, and browser/CDN caches may outlive replacement; no workflow can revoke those copies.
+
+## Deployment failure investigation (3 November 2026)
+
+Read-only checks of runs `41668715821` and `41670663009` established:
+
+- The first deployment progressed from `deployment_queued` to `updating_pages`, stayed there
+  until the action's ten-minute timeout, then was explicitly cancelled by `deploy-pages`.
+- Both runs sent `pages_build_version: ae93230280683ce78178268b4b8e7efbbe301711`, but different
+  artifact IDs (`13247251357` and `13247507858`). Both logged that SHA as the deployment ID.
+  The second run's first status poll immediately reported `Deployment cancelled.`
+- The Pages-specific status endpoint still returned `deployment_cancelled` for that ID.
+  Both runs' artifact lists were empty after cleanup. The Pages configuration endpoint
+  reported `build_type: workflow` and the expected HTTPS URL.
+
+The pinned [deploy action's source](https://github.com/actions/deploy-pages/tree/d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e/src/internal)
+uses `GITHUB_SHA` as the build version, polls the returned deployment ID (falling back to the
+build version), and explicitly cancels on timeout. This supports the hypothesis that the
+second request observed cancelled state associated with the same SHA. It does **not** prove
+the server's internal reuse rules or explain the original stall. Historical upstream reports
+([#22](https://github.com/actions/deploy-pages/issues/22),
+[#406](https://github.com/actions/deploy-pages/issues/406)) describe similar backend stalls;
+they are not evidence of a confirmed GitHub incident at the time of these runs.
+
+The missing `configure-pages` action is not an established cause: the site already exists in
+Actions mode, and that action's non-enabling path only reads site metadata. Adding the official
+preflight follows the static-site starter workflow and catches missing-site configuration
+earlier; it is **not** a claimed fix for stuck/cancelled deployments.
+
+Do not blindly rerun the cancelled SHA or falsify `GITHUB_SHA` to force a different deployment.
+Before requesting another publication approval, inspect the existing state with read-only
+commands (substitute the actual SHA/run ID):
+
+```sh
+gh api repos/cadeljones/mega-s01e04-rig/pages
+gh api repos/cadeljones/mega-s01e04-rig/pages/deployments/SHA
+gh api repos/cadeljones/mega-s01e04-rig/actions/runs/RUN_ID/artifacts
+gh run view RUN_ID --repo cadeljones/mega-s01e04-rig --log-failed
+```
+
+A newly reviewed commit supplies a new build version, but is not a guaranteed remedy for a
+Pages backend stall. If a future approved attempt also stalls, retain the run IDs, deployment
+ID and timestamps for GitHub Support rather than repeatedly publishing. Increasing the input
+timeout is not a remedy: the pinned deploy action caps it at ten minutes. Do not change Pages
+settings, remove deployments, or rerun publication without separate approval. After any
+successful marked or unmarked deployment, verify the actual public page, not only action status.
 
 ## Local export (no publication)
 
