@@ -18,11 +18,20 @@ export function StatusBoard({ status }: { status: Status }) {
       {status.nights.length === 0 ? (
         <p class="mute">nothing in runs/</p>
       ) : (
-        <ul>
-          {status.nights.map((n) => (
-            <li>{n}</li>
-          ))}
-        </ul>
+        <>
+          <p class="mute">Counts are valid log events, not final job statuses.</p>
+          <ul>
+            {status.nights.map((n) => {
+              const counts = status.nightCounts[n];
+              return (
+                <li>
+                  <a href={`/digest/${n}`}>{n}</a>
+                  {' · '}ok {counts?.ok ?? '—'} / retry {counts?.retry ?? '—'} / fail {counts?.fail ?? '—'}
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </>
   );
