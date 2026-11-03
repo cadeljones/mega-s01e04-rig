@@ -26,8 +26,10 @@ function text(html: string) {
 // Do not couple these integration tests to view classes or exact markup.
 function tableRows(html: string) {
   return [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].flatMap((match) => {
-    const cell = match[1].match(/<td\b[^>]*>([\s\S]*?)<\/td>/i);
-    return cell ? [{ job: text(cell[1]), text: text(match[1]) }] : [];
+    // Header-only rows are not jobs; a job cell may be a semantic row header.
+    if (!/<td\b/i.test(match[1])) return [];
+    const cell = match[1].match(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/i);
+    return cell ? [{ job: text(cell[2]), text: text(match[1]) }] : [];
   });
 }
 
