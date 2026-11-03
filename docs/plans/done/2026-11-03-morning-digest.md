@@ -1,6 +1,6 @@
 ---
 plan: morning-digest
-status: ready
+status: done
 owner: rook
 opened: 2026-10-29
 ---
@@ -77,3 +77,27 @@ page again with `LANE_MARKER` unset (the banner reads "no marker set") and uploa
 link. Move this plan to `docs/plans/done/` with its issue list.
 
 Done when: the preview link no longer shows the lane marker.
+
+## Issues
+
+- [#1 — Digest types and reader contract](https://github.com/cadeljones/mega-s01e04-rig/issues/1)
+- [#2 — Read and aggregate a night run log](https://github.com/cadeljones/mega-s01e04-rig/issues/2)
+- [#3 — Render GET /digest/:night](https://github.com/cadeljones/mega-s01e04-rig/issues/3)
+- [#4 — Serve GET /api/digest/:night](https://github.com/cadeljones/mega-s01e04-rig/issues/4)
+- [#5 — Link nights from the status board with counts](https://github.com/cadeljones/mega-s01e04-rig/issues/5)
+- [#6 — Test digest HTML and JSON routes](https://github.com/cadeljones/mega-s01e04-rig/issues/6)
+- [#7 — Publish the HTML copy for review](https://github.com/cadeljones/mega-s01e04-rig/issues/7)
+- [#8 — Remove the preview marker after review and archive the plan](https://github.com/cadeljones/mega-s01e04-rig/issues/8)
+
+## Completion — 3 November 2026
+
+- The course confirmed the reviewer had seen the preview before issue #7 was closed and before
+  cleanup. The human approved replacing the same public URL without the marker.
+- Cleanup deployment [run 41677233818](https://github.com/cadeljones/mega-s01e04-rig/actions/runs/41677233818)
+  succeeded. The coordinator then fetched the exact public URL,
+  <https://cadeljones.github.io/mega-s01e04-rig/>, and verified HTTP 200, the `no marker set`
+  banner, absence of the lane marker, and all five jobs. This verifies the deployed replacement,
+  not merely the workflow's success status.
+- The plan is archived here after that verification; the historical acceptance criteria above
+  are unchanged. The coordinator will push the archive and close issue #8, then make the final
+  course claim.
