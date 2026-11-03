@@ -50,6 +50,7 @@ jobs:
         env:
           INCLUDE_MARKER: ${{ inputs.include_marker }}
           LANE_MARKER: ${{ inputs.include_marker && secrets.LANE_MARKER || '' }}
+          EXPECTED_LANE_MARKER: ${{ secrets.LANE_MARKER }}
           PORT: '8787'
         run: |
           set -euo pipefail
@@ -71,6 +72,16 @@ jobs:
             --retry-max-time 45 --max-time 2 http://localhost:8787/health
           curl --fail --silent --show-error --max-time 10 \
             http://localhost:8787/digest/2026-10-28 > "$RUNNER_TEMP/rig-preview/index.html"
+          if [[ "$INCLUDE_MARKER" == 'false' ]]; then
+            if ! grep -Fq -- '<span class="marker">no marker set</span>' "$RUNNER_TEMP/rig-preview/index.html"; then
+              echo '::error::Cleanup export is missing the no-marker banner.'
+              exit 1
+            fi
+            if [[ -n "$EXPECTED_LANE_MARKER" ]] && grep -Fq -- "$EXPECTED_LANE_MARKER" "$RUNNER_TEMP/rig-preview/index.html"; then
+              echo '::error::Cleanup export still contains the repository lane marker.'
+              exit 1
+            fi
+          fi
 
       - name: Upload temporary Pages artifact
         id: upload

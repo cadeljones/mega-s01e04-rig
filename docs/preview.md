@@ -32,6 +32,10 @@ gh run watch RUN_ID --repo cadeljones/mega-s01e04-rig --exit-status
 `LANE_MARKER` comes from the repository secret; a missing/empty value stops the export before
 upload or deployment, without printing the value. When false, the export process receives an
 explicitly empty `LANE_MARKER`; no `.env` is loaded by this export server.
+Before upload, an unmarked export must contain the exact `no marker set` banner and must not
+contain the repository lane marker (when that secret is configured). The guard reads the secret
+separately as `EXPECTED_LANE_MARKER`, leaving `LANE_MARKER` empty for cleanup. Both HTML checks
+are quiet: failures stop publication with a generic error, without printing the HTML or marker.
 
 Use the deployment environment's URL (normally
 `https://cadeljones.github.io/mega-s01e04-rig/`). Every run replaces the root `index.html` at that
